@@ -8,8 +8,9 @@ from matplotlib.figure import Figure
 from PyQt5.QtWidgets import QMessageBox, QLineEdit, QPushButton, QDialog, QFormLayout
 from PyQt5 import QtCore, QtWidgets
 
+import utilities as uti
 from pointSelector import myPointSelector
-
+from polygonSelector import myPolygonSelector
 matplotlib.use('qt5Agg')
 
 
@@ -109,6 +110,9 @@ class UserInteraction:
         self.isCanvasSet = True
         self.__savePointColors()
 
+    def setData(self):
+        self.data = Data(self.resolution)
+
     def askUserDimAndReso(self):
         inp = DimensionAndResolutionDialog()
 
@@ -152,6 +156,7 @@ class UserInteraction:
         return self.dimension, self.resolution
 
     def initCompute(self):
+        print("Initialising computations")
         pass
 
     def initPostProcess(self):
@@ -167,8 +172,30 @@ class UserInteraction:
         self.pillarCoords.append(selectedPillarVertices)
         print(f'Pillar Coords {self.pillarCoords}')
 
-    def onPolygonCornersSelect(self):
-        pass
+    def connectPolygonSelector(self):
+        self.polygonSel = myPolygonSelector(self.canvas.axLeft2D, self.canvas.h, self.onPolygonCornersSelect)
+
+    def onPolygonCornersSelect(self, vert):
+        corners = vert
+        corners.append(corners[0])
+        self.data.cornerIndex = [uti.coords2Index(v[0], v[1], self.canvas.h) for v in corners]
+
+        ## get a matrix with 2:edge, 3: corner
+        self.data.flagMtx = self.getBorderPolygon(self.data.flagMtx,  self.data.cornerIndex)
+        self.data.flagMtx = self.callFloodFill(self.data.flagMtx)
+
+        ## rotate to make the image align
+        ##self.canvas.axRight3D.imshow(np.array(np.rot90(self.data.flagMtx)))
+        ## draw the result of your implementation
+        ##self.canvas.fig.canvas.draw()
+
+    def getBorderPolygon(self, flagMtx: np.array, cornerIndex: list) -> np.array:
+        print("getBorderPolygon opened")
+        return flagMtx
+
+    def callFloodFill(self, flagMtx: np.array) -> np.array:
+        print("callFloodFill opened")
+        return flagMtx
 
     def __changeSelectedPillarColor(self, selectedPillarVertices):
 
@@ -188,6 +215,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def initilize(self):
         self.interactor = UserInteraction()
         self.interactor.askUserDimAndReso()
+        self.interactor.setData()
 
         self.dimension, self.resolution = self.interactor.getDimAndReso()
 
@@ -201,10 +229,14 @@ class MainWindow(QtWidgets.QMainWindow):
         self.buttonLayout = QtWidgets.QHBoxLayout()
 
         self.pillarButton = QtWidgets.QPushButton('Add Pillar', self)
+        self.calculate = QtWidgets.QPushButton('Start calculation', self)
+        self.polygonInput = QtWidgets.QPushButton('Polygon Input', self)
         self.closeButton = QtWidgets.QPushButton('Close', self)
         self.restartButton = QtWidgets.QPushButton('Restart', self)
 
         self.pillarButton.clicked.connect(self.interactor.connectPointSelector)
+        self.calculate.clicked.connect(self.interactor.initCompute)
+        self.polygonInput.clicked.connect(self.interactor.connectPolygonSelector)
         self.closeButton.clicked.connect(self.close)
         self.restartButton.clicked.connect(self.restart)
 
@@ -213,6 +245,8 @@ class MainWindow(QtWidgets.QMainWindow):
         layout.addWidget(toolbar, 0, 0)
         layout.addWidget(sc, 1, 0)
         layout.addWidget(self.pillarButton, 0, 1)
+        layout.addWidget(self.calculate, 0, 2)
+        layout.addWidget(self.polygonInput, 0, 3)
         layout.addWidget(self.closeButton, 3, 1)
         layout.addWidget(self.restartButton, 3, 2)
 
@@ -235,6 +269,26 @@ class MainWindow(QtWidgets.QMainWindow):
     def restart(self):
         self.close()
         self.initilize()
+
+
+class Data:
+
+    def __init__(self, resolution):
+        self.u = np.zeros((resolution, resolution))
+        self.flagMtx = np.ones((resolution, resolution))
+        self.pillarCoords = []
+        self.pillarIndex = []
+        self.cornerCoords = []
+        self.cornerIndex = []
+
+
+class ComputeKernel:
+
+    def compute(self):
+        pass
+
+    def postprocess(self):
+        pass
 
 
 if __name__ == '__main__':

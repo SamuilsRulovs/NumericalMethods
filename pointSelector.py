@@ -5,6 +5,7 @@ import matplotlib as mpl
 from packaging import version
 import utilities as uti
 
+
 class myPointSelector(_SelectorWidget):
     """
     Select a point from an axes.
@@ -35,8 +36,9 @@ class myPointSelector(_SelectorWidget):
         if the mouse click is within `vertex_select_radius` pixels of the
         vertex. The default radius is 15 pixels.
     """
-    def __init__(self, ax,h, onselect, useblit=False,
-                 lineprops=None, markerprops=None, vertex_select_radius=15 ):
+
+    def __init__(self, ax, h, onselect, useblit=False,
+                 lineprops=None, markerprops=None, vertex_select_radius=15):
         self.h = h
         state_modifier_keys = dict(clear='not-applicable', move_vertex='not-applicable',
                                    move_all='not-applicable', move='not-applicable',
@@ -50,16 +52,17 @@ class myPointSelector(_SelectorWidget):
         if markerprops is None:
             markerprops = dict(mec='r', mfc='r')
         self._points_handles = ToolHandles(self.ax, self._xs, self._ys,
-                                            useblit=useblit,
-                                            marker_props=markerprops)
+                                           useblit=useblit,
+                                           marker_props=markerprops)
         if version.parse(mpl.__version__) < version.parse("3.5.0"):
-            self.artists =  [self._points_handles.artist]
+            self.artists = [self._points_handles.artist]
         else:
             self._handles_artists = self._points_handles.artists
-            lineprops = dict(color='r', linestyle='-', linewidth=2, alpha=0.5,animated=self.useblit,visible=False)
+            lineprops = dict(color='r', linestyle='-', linewidth=2, alpha=0.5, animated=self.useblit, visible=False)
             self.line = Line2D([], [], **lineprops)
             self.ax.add_line(self.line)
             self._selection_artist = self.line
+
     def onmove(self, event):
         """Cursor move event handler and validator"""
         # Method overrides _SelectorWidget.onmove because the point selector
@@ -71,24 +74,26 @@ class myPointSelector(_SelectorWidget):
             self._onmove(event)
             return True
         return False
+
     def _onmove(self, event):
         """Cursor move event handler"""
         self._xs[-1], self._ys[-1] = event.xdata, event.ydata
         self._points_handles.set_data(self._xs, self._ys)
         self._draw_point()
+
     def _press(self, event):
         """Button press event handler"""
         ## if right click pressed
         # if int(event.button) == 3:
         #     self.onselect([[x,y] for x,y in zip(self._xs[0:-1],self._ys[0:-1])])
         ## if left click pressed
-        if int(event.button) == 1 :
-            ix,iy = uti.coords2Index(event.xdata,event.ydata,self.h)
-            x,y = uti.index2Coords(ix,iy,self.h)
+        if int(event.button) == 1:
+            ix, iy = uti.coords2Index(event.xdata, event.ydata, self.h)
+            x, y = uti.index2Coords(ix, iy, self.h)
             self._xs.insert(-1, x)
             self._ys.insert(-1, y)
             self._draw_point()
-            self.onselect([[x,y] for x,y in zip(self._xs[0:-1],self._ys[0:-1])])
+            self.onselect([[x, y] for x, y in zip(self._xs[0:-1], self._ys[0:-1])])
 
     def _draw_point(self):
         """Redraw the point based on the new vertex positions."""
