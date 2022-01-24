@@ -11,6 +11,10 @@ from PyQt5 import QtCore, QtWidgets
 import utilities as uti
 from pointSelector import myPointSelector
 from polygonSelector import myPolygonSelector
+from Data import Data
+from computeKernel import ComputeKernel
+from creatFlagMtx import createFlagMtx
+
 matplotlib.use('qt5Agg')
 
 
@@ -157,10 +161,15 @@ class UserInteraction:
 
     def initCompute(self):
         print("Initialising computations")
-        pass
+        computations = ComputeKernel(self.data)
+        computations.compute()
+        self.data = computations.data
+        self.initPostProcess(computations)
 
-    def initPostProcess(self):
-        pass
+    def initPostProcess(self, computations):
+        print("Initialising computations")
+        mesh_x, mesh_y, mesh_z = computations.postprocess()
+        self.canvas.axRight3D.plot_surface(mesh_x, mesh_y, mesh_z)
 
     def onPillarSelect(self, selectedPillarVertices):
         '''Selected vertices are provided from point selector object.'''
@@ -179,23 +188,10 @@ class UserInteraction:
         corners = vert
         corners.append(corners[0])
         self.data.cornerIndex = [uti.coords2Index(v[0], v[1], self.canvas.h) for v in corners]
-
+        calculateFlagMtx = createFlagMtx(self.data)
         ## get a matrix with 2:edge, 3: corner
-        self.data.flagMtx = self.getBorderPolygon(self.data.flagMtx,  self.data.cornerIndex)
-        self.data.flagMtx = self.callFloodFill(self.data.flagMtx)
-
-        ## rotate to make the image align
-        ##self.canvas.axRight3D.imshow(np.array(np.rot90(self.data.flagMtx)))
-        ## draw the result of your implementation
-        ##self.canvas.fig.canvas.draw()
-
-    def getBorderPolygon(self, flagMtx: np.array, cornerIndex: list) -> np.array:
-        print("getBorderPolygon opened")
-        return flagMtx
-
-    def callFloodFill(self, flagMtx: np.array) -> np.array:
-        print("callFloodFill opened")
-        return flagMtx
+        calculateFlagMtx.getBorderPolygon(self.canvas.h)
+        calculateFlagMtx.callFloodFill(0, 0)
 
     def __changeSelectedPillarColor(self, selectedPillarVertices):
 
@@ -269,26 +265,6 @@ class MainWindow(QtWidgets.QMainWindow):
     def restart(self):
         self.close()
         self.initilize()
-
-
-class Data:
-
-    def __init__(self, resolution):
-        self.u = np.zeros((resolution, resolution))
-        self.flagMtx = np.ones((resolution, resolution))
-        self.pillarCoords = []
-        self.pillarIndex = []
-        self.cornerCoords = []
-        self.cornerIndex = []
-
-
-class ComputeKernel:
-
-    def compute(self):
-        pass
-
-    def postprocess(self):
-        pass
 
 
 if __name__ == '__main__':
