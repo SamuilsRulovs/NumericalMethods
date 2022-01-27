@@ -62,41 +62,27 @@ def getBorderPolygon(flagMtx: np.array, cornerIndex: list) -> np.array:
 def callFloodFill(flagMtx: np.array, x, y) -> np.array:
     if flagMtx[x, y] == 1:
         flagMtx[x, y] = 0
-        if x == 0 and y == 0:
+        try:
             callFloodFill(flagMtx, x, y + 1)
-            callFloodFill(flagMtx, x + 1, y)
-        elif x == 0 and y != 0 and y != flagMtx.shape[0]-1:
-            callFloodFill(flagMtx, x, y + 1)
+        except IndexError:
+            pass
+        try:
             callFloodFill(flagMtx, x, y - 1)
+        except IndexError:
+            pass
+        try:
             callFloodFill(flagMtx, x + 1, y)
-        elif x != 0 and y == 0 and x != flagMtx.shape[1]-1:
-            callFloodFill(flagMtx, x, y + 1)
-            callFloodFill(flagMtx, x + 1, y)
+        except IndexError:
+            pass
+        try:
             callFloodFill(flagMtx, x - 1, y)
-        elif x == flagMtx.shape[1]-1 and y == 0:
-            callFloodFill(flagMtx, x, y + 1)
-            callFloodFill(flagMtx, x - 1, y)
-        elif x == flagMtx.shape[1]-1 and y == flagMtx.shape[0]-1:
-            callFloodFill(flagMtx, x, y - 1)
-            callFloodFill(flagMtx, x - 1, y)
-        elif x == flagMtx.shape[1]-1 and y != 0:
-            callFloodFill(flagMtx, x, y + 1)
-            callFloodFill(flagMtx, x, y - 1)
-            callFloodFill(flagMtx, x - 1, y)
-        elif x != flagMtx.shape[1]-1 and y == flagMtx.shape[0]-1:
-            callFloodFill(flagMtx, x, y - 1)
-            callFloodFill(flagMtx, x + 1, y)
-            callFloodFill(flagMtx, x - 1, y)
-        else:
-            callFloodFill(flagMtx, x, y + 1)
-            callFloodFill(flagMtx, x, y - 1)
-            callFloodFill(flagMtx, x + 1, y)
-            callFloodFill(flagMtx, x - 1, y)
+        except IndexError:
+            pass
     return flagMtx
 
 
 corners = []
-resolution = 15
+resolution = 10
 dimension = 6
 h = dimension / (resolution - 1.)
 fig = plt.figure()

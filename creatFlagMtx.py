@@ -59,33 +59,19 @@ class createFlagMtx:
         print("callFloodFill opened")
         if self.data.flagMtx[x, y] == 1:
             self.data.flagMtx[x, y] = 0
-            if x == 0 and y == 0:
+            try:
                 self.callFloodFill(x, y + 1)
-                self.callFloodFill(x + 1, y)
-            elif x == 0 and y != 0 and y != self.data.resolution - 1:
-                self.callFloodFill(x, y + 1)
+            except IndexError:
+                pass
+            try:
                 self.callFloodFill(x, y - 1)
+            except IndexError:
+                pass
+            try:
                 self.callFloodFill(x + 1, y)
-            elif x != 0 and y == 0 and x != self.data.resolution - 1:
-                self.callFloodFill(x, y + 1)
-                self.callFloodFill(x + 1, y)
+            except IndexError:
+                pass
+            try:
                 self.callFloodFill(x - 1, y)
-            elif x == self.data.resolution - 1 and y == 0:
-                self.callFloodFill(x, y + 1)
-                self.callFloodFill(x - 1, y)
-            elif x == self.data.resolution - 1 and y == self.data.resolution - 1:
-                self.callFloodFill(x, y - 1)
-                self.callFloodFill(x - 1, y)
-            elif x == self.data.resolution - 1 and y != 0:
-                self.callFloodFill(x, y + 1)
-                self.callFloodFill(x, y - 1)
-                self.callFloodFill(x - 1, y)
-            elif x != self.data.resolution - 1 and y == self.data.resolution - 1:
-                self.callFloodFill(x, y - 1)
-                self.callFloodFill(x + 1, y)
-                self.callFloodFill(x - 1, y)
-            else:
-                self.callFloodFill(x, y + 1)
-                self.callFloodFill(x, y - 1)
-                self.callFloodFill(x + 1, y)
-                self.callFloodFill(x - 1, y)
+            except IndexError:
+                pass

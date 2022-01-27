@@ -161,15 +161,17 @@ class UserInteraction:
 
     def initCompute(self):
         print("Initialising computations")
+
         computations = ComputeKernel(self.data)
         computations.compute()
         self.data = computations.data
-        self.initPostProcess(computations)
 
-    def initPostProcess(self, computations):
-        print("Initialising computations")
+    def initPostProcess(self):
+        print("Initialising postprocess")
+        computations = ComputeKernel(self.data)
         mesh_x, mesh_y, mesh_z = computations.postprocess()
-        self.canvas.axRight3D.plot_surface(mesh_x, mesh_y, mesh_z)
+        # mesh_z = np.ma.masked_equal(mesh_z, None)
+        self.canvas.axRight3D.plot_surface(mesh_x, mesh_y, mesh_z, rstride=1, cstride=1)
 
     def onPillarSelect(self, selectedPillarVertices):
         '''Selected vertices are provided from point selector object.'''
@@ -179,7 +181,11 @@ class UserInteraction:
         self.__changeSelectedPillarColor(selectedPillarVertices)
         self.pointSelector.update()
         self.pillarCoords.append(selectedPillarVertices)
-        print(f'Pillar Coords {self.pillarCoords}')
+        pillarIndeces = [coords2Index(coords[0], coords[1], self.canvas.h) for coords in selectedPillarVertices]
+        for index in pillarIndeces:
+            self.data.flagMtx[index[0], index[1]] = 4
+        for index in pillarIndeces:
+            self.data.wMtx[index[0], index[1]] = self.pillarHeights[len(self.pillarHeights) -1]
 
     def connectPolygonSelector(self):
         self.polygonSel = myPolygonSelector(self.canvas.axLeft2D, self.canvas.h, self.onPolygonCornersSelect)
@@ -226,13 +232,13 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.pillarButton = QtWidgets.QPushButton('Add Pillar', self)
         self.calculate = QtWidgets.QPushButton('Start calculation', self)
-        self.polygonInput = QtWidgets.QPushButton('Polygon Input', self)
+        self.post_process = QtWidgets.QPushButton('Post process', self)
         self.closeButton = QtWidgets.QPushButton('Close', self)
         self.restartButton = QtWidgets.QPushButton('Restart', self)
 
         self.pillarButton.clicked.connect(self.interactor.connectPointSelector)
         self.calculate.clicked.connect(self.interactor.initCompute)
-        self.polygonInput.clicked.connect(self.interactor.connectPolygonSelector)
+        self.post_process.clicked.connect(self.interactor.initPostProcess)
         self.closeButton.clicked.connect(self.close)
         self.restartButton.clicked.connect(self.restart)
 
@@ -241,8 +247,8 @@ class MainWindow(QtWidgets.QMainWindow):
         layout.addWidget(toolbar, 0, 0)
         layout.addWidget(sc, 1, 0)
         layout.addWidget(self.pillarButton, 0, 1)
-        layout.addWidget(self.calculate, 0, 2)
-        layout.addWidget(self.polygonInput, 0, 3)
+        layout.addWidget(self.calculate, 1, 1)
+        layout.addWidget(self.post_process, 1, 2)
         layout.addWidget(self.closeButton, 3, 1)
         layout.addWidget(self.restartButton, 3, 2)
 
@@ -254,6 +260,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setWindowTitle('Membrane Application')
 
         self.show()
+        self.interactor.connectPolygonSelector()
 
     def onPillarSelect(self, selectedPillarVertices):
         '''After the user presses right click, selected vertices are provided from point selector object.'''
