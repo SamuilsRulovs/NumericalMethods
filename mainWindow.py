@@ -259,7 +259,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setCentralWidget(widget)
         self.setWindowTitle('Membrane Application')
 
-        self.show()
+        self.showMaximized()
         self.interactor.connectPolygonSelector()
 
     def onPillarSelect(self, selectedPillarVertices):
